@@ -287,7 +287,7 @@
       })
     
     ;; Log activity
-    (add-activity project-id "project-created" "Project was created" none none)
+    (add-activity project-id u"project-created" u"Project was created" none none)
     
     ;; Return project ID
     (ok project-id)))
@@ -325,7 +325,7 @@
       })
     
     ;; Log activity
-    (add-activity project-id "project-updated" "Project details updated" none none)
+    (add-activity project-id u"project-updated" u"Project details updated" none none)
     
     (ok true)))
 
@@ -357,7 +357,7 @@
       })
     
     ;; Log activity
-    (add-activity project-id "member-added" (concat "New member added with role " (to-utf8 (some role))) none none)
+    (add-activity project-id u"member-added" u"New member added to project" none none)
     
     (ok true)))
 
@@ -390,7 +390,7 @@
       })
     
     ;; Log activity
-    (add-activity project-id "role-updated" (concat "Member role updated to " (to-utf8 (some new-role))) none none)
+    (add-activity project-id u"role-updated" u"Member role updated" none none)
     
     (ok true)))
 
@@ -413,7 +413,7 @@
     (map-delete team-members { project-id: project-id, member: member })
     
     ;; Log activity
-    (add-activity project-id "member-removed" "Team member removed from project" none none)
+    (add-activity project-id u"member-removed" u"Team member removed from project" none none)
     
     (ok true)))
 
@@ -461,7 +461,7 @@
       })
     
     ;; Log activity
-    (add-activity project-id "task-created" "New task created" (some task-id) milestone-id)
+    (add-activity project-id u"task-created" u"New task created" (some task-id) milestone-id)
     
     (ok task-id)))
 
@@ -511,7 +511,7 @@
       })
     
     ;; Log activity
-    (add-activity project-id "task-updated" "Task details updated" (some task-id) milestone-id)
+    (add-activity project-id u"task-updated" u"Task details updated" (some task-id) milestone-id)
     
     (ok true)))
 
@@ -560,7 +560,7 @@
                        { is-completed: true }))
               
               ;; Log milestone completion
-              (add-activity project-id "milestone-completed" "Milestone completed" none (get milestone-id (unwrap-panic task)))
+              (add-activity project-id u"milestone-completed" u"Milestone completed" none (get milestone-id (unwrap-panic task)))
             )
             ;; No action if not all tasks for milestone are completed
             true
@@ -570,13 +570,13 @@
     )
     
     ;; Log activity
-    (add-activity project-id "task-status-updated" 
-                 (concat "Task status changed to " 
-                        (if (is-eq new-status task-status-pending) "Pending"
-                         (if (is-eq new-status task-status-in-progress) "In Progress"
-                          (if (is-eq new-status task-status-review) "In Review"
-                           (if (is-eq new-status task-status-completed) "Completed"
-                            "Cancelled"))))) 
+    (add-activity project-id u"task-status-updated" 
+                 (concat u"Task status changed to " 
+                        (if (is-eq new-status task-status-pending) u"Pending"
+                         (if (is-eq new-status task-status-in-progress) u"In Progress"
+                          (if (is-eq new-status task-status-review) u"In Review"
+                           (if (is-eq new-status task-status-completed) u"Completed"
+                            u"Cancelled"))))) 
                  (some task-id) 
                  (get milestone-id (unwrap-panic task)))
     
@@ -606,8 +606,8 @@
       { exists: true })
     
     ;; Log activity
-    (add-activity project-id "dependency-added" 
-                 (concat "Task dependency added") 
+    (add-activity project-id u"dependency-added" 
+                 u"Task dependency added" 
                  (some task-id) 
                  none)
     
@@ -631,8 +631,8 @@
       { project-id: project-id, task-id: task-id, dependency-task-id: dependency-task-id })
     
     ;; Log activity
-    (add-activity project-id "dependency-removed" 
-                 (concat "Task dependency removed") 
+    (add-activity project-id u"dependency-removed" 
+                 u"Task dependency removed" 
                  (some task-id) 
                  none)
     
@@ -663,8 +663,8 @@
              }))
     
     ;; Log activity
-    (add-activity project-id "deliverable-added" 
-                 "Deliverable added to task" 
+    (add-activity project-id u"deliverable-added" 
+                 u"Deliverable added to task" 
                  (some task-id) 
                  (get milestone-id (unwrap-panic task)))
     
@@ -696,8 +696,8 @@
       })
     
     ;; Log activity
-    (add-activity project-id "work-logged" 
-                 (concat "Work hours logged on task: " (to-utf8 (some hours))) 
+    (add-activity project-id u"work-logged" 
+                 (concat u"Work hours logged on task: " u"") 
                  (some task-id) 
                  (get milestone-id (unwrap-panic task)))
     
@@ -727,8 +727,8 @@
       })
     
     ;; Log activity
-    (add-activity project-id "comment-added" 
-                 "Comment added to task" 
+    (add-activity project-id u"comment-added" 
+                 u"Comment added to task" 
                  (some task-id) 
                  (get milestone-id (unwrap-panic task)))
     
@@ -748,4 +748,21 @@
     (asserts! (is-some project) err-project-not-found)
     
     ;; Check if user is authorized (owner or manager)
-    (asserts! (is-authorized project-id tx-sender role-manager) err-
+    (asserts! (is-authorized project-id tx-sender role-manager) err-not-authorized)
+    
+    ;; Create milestone
+    (map-set milestones
+      { project-id: project-id, milestone-id: milestone-id }
+      {
+        title: title,
+        description: description,
+        due-date: due-date,
+        payment-amount: payment-amount,
+        is-completed: false,
+        is-paid: false
+      })
+    
+    ;; Log activity
+    (add-activity project-id u"milestone-created" u"New milestone created" none (some milestone-id))
+    
+    (ok milestone-id)))
